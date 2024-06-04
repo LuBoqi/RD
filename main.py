@@ -10,7 +10,6 @@ import cvzone
 from cvzone.HandTrackingModule import HandDetector
 from PIL import Image, ImageDraw, ImageFont
 
-
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
@@ -29,38 +28,6 @@ def cap_mat():
                 color_image = color_frame.to_array()
 
 
-if __name__ == '__main__':
-    _thread.start_new_thread(cap_mat, ())
-    time.sleep(1)
-    with mp_hands.Hands(model_complexity=0, min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
-        while True:
-            image = color_image
-            # To improve performance, optionally mark the image as not writeable to
-            # pass by reference.
-            image.flags.writeable = False
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            results = hands.process(image)
-            # Draw the hand annotations on the image.
-            image.flags.writeable = True
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            if results.multi_hand_landmarks:
-                for hand_landmarks in results.multi_hand_landmarks:
-                    mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS,
-                                              mp_drawing_styles.get_default_hand_landmarks_style(),
-                                              mp_drawing_styles.get_default_hand_connections_style())
-            # Flip the image horizontally for a selfie-view display.
-            cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
-            cv2.waitKey(1)
-
-cap = cv2.VideoCapture(0)  # 0为自己的摄像头
-cap.set(3, 1280)  # 宽
-cap.set(4, 720)  # 高
-
-detector = HandDetector(detectionCon=0.8, maxHands=1)
-
-startGame = False
-
-
 # 计算向量积
 def cross(pt1, pt2, pt3):
     return (pt2[0] - pt1[0]) * (pt3[1] - pt1[1]) - (pt2[1] - pt1[1]) * (pt3[0] - pt1[0])
@@ -74,7 +41,7 @@ def cv2AddChineseText(image, text, position, textColor=(255, 255, 255), textSize
     draw = ImageDraw.Draw(image)
     # 字体的格式
     fontStyle = ImageFont.truetype(
-        "wqy-zenhei.ttc", textSize, encoding="utf-8") #使用系统中存在的中文字体
+        "wqy-zenhei.ttc", textSize, encoding="utf-8")  # 使用系统中存在的中文字体
     # 绘制文本
     draw.text(position, text, textColor, font=fontStyle)
     # 转换回OpenCV格式
@@ -107,7 +74,7 @@ class SnakeGameClass:
     def randomFoodLocation(self):
         self.foodPoint = random.randint(100, 1000), random.randint(100, 600)
 
-    def update(self, imgMain, currentHead, Hands):  # 实例方法
+    def update(self, imgMain, currentHead):  # 实例方法
 
         if self.gameOver:
             imgMain = cv2AddChineseText(imgMain, "游戏结束", [450, 200], textColor=(255, 0, 0), textSize=80)
@@ -194,39 +161,54 @@ class SnakeGameClass:
         return imgMain
 
 
-game = SnakeGameClass("apple.png", "head.png")
+if __name__ == '__main__':
+    _thread.start_new_thread(cap_mat, ())
+    time.sleep(1)
+    cap = cv2.VideoCapture(0)  # 0为自己的摄像头
+    detector = HandDetector(detectionCon=0.8, maxHands=1)
+    startGame = False
+    game = SnakeGameClass("apple.png", "head.png")
+    with mp_hands.Hands(model_complexity=0, min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
+        while True:
+            image = color_image
+            # To improve performance, optionally mark the image as not writeable to
+            # pass by reference.
+            image.flags.writeable = False
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            results = hands.process(image)
+            # Draw the hand annotations on the image.
+            image.flags.writeable = True
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            img = image
 
-while True:
-    success, img = cap.read()
-    img = cv2.flip(img, 1)  # 将手水平翻转
-    imgOutput = img.copy()
-    hands, img = detector.findHands(img, flipType=False)  # 左手是左手，右手是右手，映射正确
+            if startGame:
+                if results.multi_hand_landmarks:
+                    for hand_landmarks in results.multi_hand_landmarks:
+                        mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS,
+                                                  mp_drawing_styles.get_default_hand_landmarks_style(),
+                                                  mp_drawing_styles.get_default_hand_connections_style())
+                        x, y = hand_landmarks.landmark[8].x, hand_landmarks.landmark[8].y
+                        x, y = x * img.shape[1], y * img.shape[0]
+                        print(x, y)
+                    pointIndex = (0, 0)
+                    img = game.update(img, pointIndex)
+                else:
+                    if game.gameOver:
+                        img = cv2AddChineseText(img, '手势贪吃蛇', [400, 200], textColor=(255, 0, 0), textSize=100)
+                        img = cv2AddChineseText(img, '按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
+                        startGame = False
 
-    if startGame:
-        if hands:
-            lmList = hands[0]['lmList']  # hands是由N个字典组成的列表
-            pointIndex = lmList[8][0:2]  # 只要食指指尖的x和y坐标
-            pointIndex = tuple(pointIndex)  # 转换数据格式22
-            hand = hands[0]
-
-            img = game.update(img, pointIndex, hand)
-        else:
-            if game.gameOver:
+            else:
                 img = cv2AddChineseText(img, '手势贪吃蛇', [400, 200], textColor=(255, 0, 0), textSize=100)
                 img = cv2AddChineseText(img, '按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
-                startGame = False
 
-    else:
-        img = cv2AddChineseText(img, '手势贪吃蛇', [400, 200], textColor=(255, 0, 0), textSize=100)
-        img = cv2AddChineseText(img, '按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
+            cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
+            cv2.setWindowProperty("Image", cv2.WND_PROP_FULLSCREEN, cv2.WND_PROP_FULLSCREEN)
+            cv2.imshow("Image", img)
 
-    cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
-    cv2.setWindowProperty("Image", cv2.WND_PROP_FULLSCREEN, cv2.WND_PROP_FULLSCREEN)
-    cv2.imshow("Image", img)
+            key = cv2.waitKey(1)
 
-    key = cv2.waitKey(1)
-
-    if key == ord('s'): # 按s键开始游戏
-        startGame = True
-        game.gameOver = False
-        game.score = 0
+            if key == ord('s'):  # 按s键开始游戏
+                startGame = True
+                game.gameOver = False
+                game.score = 0
