@@ -5,6 +5,8 @@ import pygame
 from pygame.constants import *
 
 pygame.init()
+
+
 class OptionMode(pygame.sprite.Sprite):
     """ 模式选项类 """
 
@@ -76,7 +78,7 @@ class ThrowFruit(pygame.sprite.Sprite):
         self.v_angel = 0
 
         # 水果抛出时的初速度
-        self.v0 = 6
+        self.v0 = 5
 
         # 水果标记
         self.flag = flag
@@ -244,7 +246,7 @@ class Manager(object):
     pygame.time.set_timer(THROWFRUITTIME, 3000)
 
     # 重力加速度, 取整数，使用时除以10
-    G = random.randint(22, 24)
+    G = random.randint(12, 14)
 
     # 经典模式miss掉的水果数
     classic_miss = 0
@@ -397,7 +399,7 @@ class Manager(object):
             # mouse_pos = pygame.mouse.get_pos()
             if mouse_pos[0] > item.rect.left and mouse_pos[0] < item.rect.right \
                     and mouse_pos[1] > item.rect.top and mouse_pos[1] < item.rect.bottom:
-            
+
                 self.bgm.play_splatter()
                 self.create_fruit_half(item.flag, item.rect.x, item.rect.y, item.turn_angel, item.v_angel)
                 self.option_fruit_list.remove_internal(item)
@@ -415,7 +417,7 @@ class Manager(object):
             # mouse_pos = pygame.mouse.get_pos()
             if mouse_pos[0] > item.rect.left and mouse_pos[0] < item.rect.right \
                     and mouse_pos[1] > item.rect.top and mouse_pos[1] < item.rect.bottom:
-            
+
                 if item.flag == 0:
                     self.knife.show_sandia_flash(item.rect.x, item.rect.y)
                 if item.flag == 1:
@@ -445,7 +447,7 @@ class Manager(object):
                 pygame.quit()
                 exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # 检测鼠标左键点击
-                self.impact_check()    
+                self.impact_check()
             elif event.type == Manager.THROWFRUITTIME and self.mode_flag == 1:
                 self.create_fruit()
             elif event.type == Manager.THROWFRUITTIME and self.mode_flag == 2:

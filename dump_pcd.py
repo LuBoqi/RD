@@ -16,7 +16,6 @@ with device.running():
         frames[type_] = frame
         if FrameType.Color in frames and FrameType.Depth in frames:
             break
-
 # Use the factory calibration to undistort the depth frame and register the RGB
 # frame onto it.
 rgb, depth = frames[FrameType.Color], frames[FrameType.Depth]
@@ -28,4 +27,4 @@ with open('output.pcd', 'wb') as fobj:
     device.registration.write_pcd(fobj, undistorted, registered)
 
 with open('output_big.pcd', 'wb') as fobj:
-   device.registration.write_big_pcd(fobj, big_depth, rgb)
+    device.registration.write_big_pcd(fobj, big_depth, rgb)
