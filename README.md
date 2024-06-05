@@ -41,25 +41,23 @@ pip3 install -r requirements.txt	#you need to do it by yourself, haha
 ```
 
 ## Table of files
-
-.
-├── apple.png		#greedy snake
-├── dump_pcd.py	#use to test kinect v2 driver
-├── fruit.py			#cut fruit game
-├── head.png			#greedy snake
-├── images	#belongs to fruitGame
-├── libfreenect2	#driver for kinect v2
-├── main.py		#test two things
-├── media_pipe.py	#identify hands
-├── output_big.pcd	#test file
-├── output.pcd		#test file
-├── README.md		#write by shabi
-├── ros_ws	#ros2 will be used in future 
-├── SimHei.ttf		#used by greedy snake
-├── snakegame.py	#game code
-├── sound	#belongs to fruitGame
-└── temp_main.py	#rubbish
-
+.  
+├── apple.png &emsp; #greedy snake  
+├── dump_pcd.py &emsp; #use to test kinect v2 driver  
+├── fruit.py &emsp; #cut fruit game  
+├── head.png &emsp; #greedy snake  
+├── images &emsp; #belongs to fruitGame  
+├── libfreenect2 &emsp; #driver for kinect v2  
+├── main.py &emsp; #test two things  
+├── media_pipe.py &emsp; #identify hands  
+├── output_big.pcd &emsp; #test file  
+├── output.pcd &emsp; #test file  
+├── README.md &emsp; #write by shabi  
+├── ros_ws &emsp; #ros2 will be used in future   
+├── SimHei.ttf &emsp; #used by greedy snake  
+├── snakegame.py &emsp; #game code  
+├── sound &emsp; #belongs to fruitGame  
+└── temp_main.py &emsp; #rubbish  
 ## Thanks
 
 - Ourselves
