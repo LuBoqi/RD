@@ -159,6 +159,11 @@ class SnakeGameClass:
         return imgMain
 
 
+def checkfist(hand):
+    fingers = detector.fingersUp(hand)
+    return fingers == [0, 0, 0, 0, 0]
+
+
 if __name__ == '__main__':
     _thread.start_new_thread(cap_mat, ())
     time.sleep(1)
@@ -167,7 +172,6 @@ if __name__ == '__main__':
     game = SnakeGameClass("apple.png", "head.png")
     while True:
         img = color_image
-        img = cv2.flip(img, 1)  # 将手水平翻转
         imgOutput = img.copy()
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         hands, img = detector.findHands(img, flipType=False)  # 左手是左手，右手是右手，映射正确
@@ -179,17 +183,21 @@ if __name__ == '__main__':
                 pointIndex = lmList[8][0:2]  # 只要食指指尖的x和y坐标
                 pointIndex = tuple(pointIndex)  # 转换数据格式22
                 hand = hands[0]
-
+                print(pointIndex)
                 img = game.update(img, pointIndex, hand)
             else:
                 if game.gameOver:
                     img = cv2AddChineseText(img, '手势贪吃蛇', [400, 200], textColor=(255, 0, 0), textSize=100)
-                    img = cv2AddChineseText(img, '按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
+                    img = cv2AddChineseText(img, '握拳或按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
                     startGame = False
 
         else:
+            if hands and checkfist(hands[0]):
+                startGame = True
+                game.gameOver = False
+                game.score = 0
             img = cv2AddChineseText(img, '手势贪吃蛇', [400, 200], textColor=(255, 0, 0), textSize=100)
-            img = cv2AddChineseText(img, '按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
+            img = cv2AddChineseText(img, '握拳或按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
 
         cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
         cv2.setWindowProperty("Image", cv2.WND_PROP_FULLSCREEN, cv2.WND_PROP_FULLSCREEN)
@@ -199,5 +207,9 @@ if __name__ == '__main__':
 
         if key == ord('s'):  # 按s键开始游戏
             startGame = True
+            game.gameOver = False
+            game.score = 0
+        elif key == ord('q'):
+            startGame = False
             game.gameOver = False
             game.score = 0
