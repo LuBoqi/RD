@@ -164,7 +164,6 @@ class SnakeGameClass:
 if __name__ == '__main__':
     _thread.start_new_thread(cap_mat, ())
     time.sleep(1)
-    cap = cv2.VideoCapture(0)  # 0为自己的摄像头
     detector = HandDetector(detectionCon=0.8, maxHands=1)
     startGame = False
     game = SnakeGameClass("apple.png", "head.png")
@@ -190,6 +189,7 @@ if __name__ == '__main__':
                         x, y = hand_landmarks.landmark[8].x, hand_landmarks.landmark[8].y
                         x, y = x * img.shape[1], y * img.shape[0]
                         print(x, y)
+                    # pointIndex = (x, y)
                     pointIndex = (0, 0)
                     img = game.update(img, pointIndex)
                 else:

@@ -1,19 +1,29 @@
+import _thread
 import math
 import random
+import time
+
 import cvzone
 import cv2
 import numpy as np
 from cvzone.HandTrackingModule import HandDetector
 from PIL import Image, ImageDraw, ImageFont
 import os
+from freenect2 import Device, FrameType
 
-cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)  # 0为自己的摄像头
-cap.set(3, 1280)  # 宽
-cap.set(4, 720)  # 高
+device = Device()
+frames = {}
+color_image = []
 
-detector = HandDetector(detectionCon=0.8, maxHands=1)
 
-startGame = False
+def cap_mat():
+    global color_image
+    with device.running():
+        for type_, frame in device:
+            frames[type_] = frame
+            if FrameType.Color in frames:
+                color_frame = frames[FrameType.Color]
+                color_image = color_frame.to_array()
 
 
 # 计算向量积
@@ -149,39 +159,45 @@ class SnakeGameClass:
         return imgMain
 
 
-game = SnakeGameClass("apple.png", "head.png")
+if __name__ == '__main__':
+    _thread.start_new_thread(cap_mat, ())
+    time.sleep(1)
+    detector = HandDetector(detectionCon=0.8, maxHands=1)
+    startGame = False
+    game = SnakeGameClass("apple.png", "head.png")
+    while True:
+        img = color_image
+        img = cv2.flip(img, 1)  # 将手水平翻转
+        imgOutput = img.copy()
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        hands, img = detector.findHands(img, flipType=False)  # 左手是左手，右手是右手，映射正确
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-while True:
-    success, img = cap.read()
-    img = cv2.flip(img, 1)  # 将手水平翻转
-    imgOutput = img.copy()
-    hands, img = detector.findHands(img, flipType=False)  # 左手是左手，右手是右手，映射正确
+        if startGame:
+            if hands:
+                lmList = hands[0]['lmList']  # hands是由N个字典组成的列表
+                pointIndex = lmList[8][0:2]  # 只要食指指尖的x和y坐标
+                pointIndex = tuple(pointIndex)  # 转换数据格式22
+                hand = hands[0]
 
-    if startGame:
-        if hands:
-            lmList = hands[0]['lmList']  # hands是由N个字典组成的列表
-            pointIndex = lmList[8][0:2]  # 只要食指指尖的x和y坐标
-            pointIndex = tuple(pointIndex)  # 转换数据格式22
-            hand = hands[0]
+                img = game.update(img, pointIndex, hand)
+            else:
+                if game.gameOver:
+                    img = cv2AddChineseText(img, '手势贪吃蛇', [400, 200], textColor=(255, 0, 0), textSize=100)
+                    img = cv2AddChineseText(img, '按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
+                    startGame = False
 
-            img = game.update(img, pointIndex, hand)
         else:
-            if game.gameOver:
-                img = cv2AddChineseText(img, '手势贪吃蛇', [400, 200], textColor=(255, 0, 0), textSize=100)
-                img = cv2AddChineseText(img, '按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
-                startGame = False
+            img = cv2AddChineseText(img, '手势贪吃蛇', [400, 200], textColor=(255, 0, 0), textSize=100)
+            img = cv2AddChineseText(img, '按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
 
-    else:
-        img = cv2AddChineseText(img, '手势贪吃蛇', [400, 200], textColor=(255, 0, 0), textSize=100)
-        img = cv2AddChineseText(img, '按s开始游戏', [550, 380], textColor=(255, 0, 0), textSize=40)
+        cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
+        cv2.setWindowProperty("Image", cv2.WND_PROP_FULLSCREEN, cv2.WND_PROP_FULLSCREEN)
+        cv2.imshow("Image", img)
 
-    cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
-    cv2.setWindowProperty("Image", cv2.WND_PROP_FULLSCREEN, cv2.WND_PROP_FULLSCREEN)
-    cv2.imshow("Image", img)
+        key = cv2.waitKey(1)
 
-    key = cv2.waitKey(1)
-
-    if key == ord('s'): # 按s键开始游戏
-        startGame = True
-        game.gameOver = False
-        game.score = 0
+        if key == ord('s'):  # 按s键开始游戏
+            startGame = True
+            game.gameOver = False
+            game.score = 0
